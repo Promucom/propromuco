@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Vehicular Pro</title>
     <style>
-        /* ESTILOS BASE COMPACTOS PERO LEGIBLES */
+        /* ESTILOS BASE OPTIMIZADOS */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -13,7 +13,6 @@
             background: #f5f7fa;
             color: #333;
             font-size: 14px;
-            -webkit-text-size-adjust: 100%;
         }
         
         .container {
@@ -34,7 +33,7 @@
             border-bottom: 1px solid #3498db;
         }
         
-        /* BARRA DE BÚSQUEDA OPTIMIZADA */
+        /* BARRA DE BÚSQUEDA */
         .search-box {
             background: #ecf0f1;
             padding: 12px;
@@ -76,7 +75,7 @@
         
         table {
             width: 100%;
-            min-width: 650px; /* Ancho mínimo para forzar scroll solo cuando sea necesario */
+            min-width: 700px; /* Ancho mínimo para scroll solo cuando sea necesario */
             border-collapse: collapse;
         }
         
@@ -96,16 +95,17 @@
             font-weight: bold;
         }
         
-        /* ANCHOS OPTIMIZADOS */
-        .col-dominio { width: 18%; min-width: 80px; }
-        .col-fuente { width: 18%; min-width: 80px; }
-        .col-marca { width: 15%; min-width: 70px; }
-        .col-modelo { width: 15%; min-width: 70px; }
-        .col-fecha { width: 12%; min-width: 70px; }
-        .col-resolucion { width: 22%; min-width: 100px; }
+        /* ANCHOS OPTIMIZADOS (PATENTE MÁS CORTA) */
+        .col-dominio { width: 12%; min-width: 70px; } /* Más estrecha */
+        .col-fuente { width: 15%; min-width: 80px; }
+        .col-marca { width: 12%; min-width: 70px; }
+        .col-modelo { width: 12%; min-width: 70px; }
+        .col-color { width: 12%; min-width: 70px; } /* Nueva columna color */
+        .col-fecha { width: 12%; min-width: 80px; }
+        .col-resolucion { width: 15%; min-width: 100px; }
         .col-acciones { width: 20%; min-width: 120px; }
         
-        /* MENÚ DESPLEGABLE MEJORADO */
+        /* MENÚ DESPLEGABLE */
         .resolution-menu {
             display: flex;
             flex-direction: column;
@@ -144,11 +144,6 @@
             z-index: 1000;
             max-width: 90%;
             font-size: 14px;
-        }
-        
-        /* EFECTO HOVER PARA CELDAS */
-        td:hover {
-            background-color: #f5f5f5;
         }
     </style>
 </head>
@@ -226,7 +221,8 @@
                     ? allVehicles.filter(vehicle => 
                         (vehicle.dominio && vehicle.dominio.toLowerCase().includes(searchTerm)) ||
                         (vehicle.marca && vehicle.marca.toLowerCase().includes(searchTerm)) ||
-                        (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm))
+                        (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.color && vehicle.color.toLowerCase().includes(searchTerm))
                     )
                     : allVehicles;
                 
@@ -264,6 +260,7 @@
                             <th class="col-fuente">Fuente</th>
                             <th class="col-marca">Marca</th>
                             <th class="col-modelo">Modelo</th>
+                            <th class="col-color">Color</th>
                             <th class="col-fecha">Fecha</th>
                             <th class="col-resolucion">Resolución</th>
                             <th class="col-acciones">Acción</th>
@@ -283,6 +280,7 @@
                         <td class="col-fuente">${vehicle.fuente || '-'}</td>
                         <td class="col-marca">${vehicle.marca || '-'}</td>
                         <td class="col-modelo">${vehicle.modelo || '-'}</td>
+                        <td class="col-color">${vehicle.color || '-'}</td>
                         <td class="col-fecha">${formatShortDate(vehicle.fecha)}</td>
                         <td class="col-resolucion ${resolutionClass}">${resolutionText}</td>
                         <td class="col-acciones resolution-menu">
@@ -340,8 +338,8 @@
                 
                 const row = document.getElementById(`row-${dominio}`);
                 if (row) {
-                    row.cells[5].textContent = currentSelections[dominio];
-                    row.cells[5].className = "col-resolucion status-completed";
+                    row.cells[6].textContent = currentSelections[dominio];
+                    row.cells[6].className = "col-resolucion status-completed";
                 }
                 
                 showNotification(`Resolución actualizada: ${currentSelections[dominio]}`);
