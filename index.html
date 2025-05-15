@@ -42,15 +42,11 @@
         }
         
         .search-box input {
-            flex: 1;
-        }
-        
-        input, select {
+            width: 150px;
             padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
-            box-sizing: border-box;
         }
         
         button {
@@ -188,7 +184,6 @@
         </div>
 
         <div class="stats-container" id="statsContainer">
-            <!-- Las estadísticas se cargarán dinámicamente -->
         </div>
 
         <div id="loading" style="display: none; text-align: center; padding: 10px; font-size: 14px;">
@@ -208,7 +203,6 @@
         let currentSelections = {};
         let debounceTimer;
 
-        // Función para manejar el debounce en la búsqueda
         function handleSearchKeyup(event) {
             if (event.key === 'Enter') {
                 searchVehicles();
@@ -244,7 +238,6 @@
             }).replace(/\//g, '/');
         }
 
-        // Función para calcular y mostrar estadísticas
         function updateStats(vehicles) {
             const statsContainer = document.getElementById("statsContainer");
             
@@ -267,7 +260,7 @@
                     <div class="count">${stats.pendientes}</div>
                 </div>
                 <div class="stat-box" style="background: #27ae60;">
-                    <div>Compactados</div>
+                    <div>A compactar</div>
                     <div class="count">${stats.compactados}</div>
                 </div>
                 <div class="stat-box" style="background: #9b59b6;">
@@ -426,7 +419,6 @@
                 
                 showNotification(`Resolución actualizada: ${currentSelections[dominio]}`);
                 
-                // Actualizar estadísticas después de la modificación
                 const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
                 const filteredData = searchTerm 
                     ? allVehicles.filter(vehicle => 
