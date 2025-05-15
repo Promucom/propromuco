@@ -37,12 +37,16 @@
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-box input {
+            flex: 1;
         }
         
         input, select {
-            width: 100%;
             padding: 8px 10px;
-            margin-bottom: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
@@ -57,8 +61,30 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            width: 100%;
-            margin-top: 6px;
+            white-space: nowrap;
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .stat-box .count {
+            font-weight: bold;
+            font-size: 16px;
         }
         
         .table-container {
@@ -120,11 +146,9 @@
             font-size: 13px;
         }
         
-
         .status-pending { color: #e67e22; }
         .status-completed { color: #27ae60; }
         
-
         .notification {
             position: fixed;
             bottom: 15px;
@@ -140,6 +164,16 @@
             max-width: 90%;
             font-size: 14px;
         }
+        
+        @media (max-width: 600px) {
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -149,8 +183,12 @@
         <h1>🚗 CONSTATACIÓN VEHICULAR-PROMUCO</h1>
         
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Buscar por patente...">
+            <input type="text" id="searchInput" placeholder="Buscar por patente..." onkeyup="handleSearchKeyup(event)">
             <button onclick="searchVehicles()">Buscar</button>
+        </div>
+
+        <div class="stats-container" id="statsContainer">
+            <!-- Las estadísticas se cargarán dinámicamente -->
         </div>
 
         <div id="loading" style="display: none; text-align: center; padding: 10px; font-size: 14px;">
@@ -168,6 +206,20 @@
         const SHEETBEST_API = "https://api.sheetbest.com/sheets/c920d07f-13a9-4ad1-a479-84ad8a3c6c2a";
         let allVehicles = [];
         let currentSelections = {};
+        let debounceTimer;
+
+        // Función para manejar el debounce en la búsqueda
+        function handleSearchKeyup(event) {
+            if (event.key === 'Enter') {
+                searchVehicles();
+                return;
+            }
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                searchVehicles();
+            }, 500);
+        }
 
         function showNotification(message, isSuccess = true) {
             const notification = document.getElementById("notification");
@@ -190,6 +242,47 @@
                 month: '2-digit',
                 year: 'numeric'
             }).replace(/\//g, '/');
+        }
+
+        // Función para calcular y mostrar estadísticas
+        function updateStats(vehicles) {
+            const statsContainer = document.getElementById("statsContainer");
+            
+            const stats = {
+                total: vehicles.length,
+                pendientes: vehicles.filter(v => !v.resolucion || v.resolucion === "").length,
+                compactados: vehicles.filter(v => v.resolucion === "Compactar").length,
+                sinDatos: vehicles.filter(v => v.resolucion === "Sin Datos").length,
+                policia: vehicles.filter(v => v.resolucion === "Policia").length,
+                faltaTiempo: vehicles.filter(v => v.resolucion && v.resolucion.includes("Falta")).length
+            };
+            
+            statsContainer.innerHTML = `
+                <div class="stat-box">
+                    <div>Total</div>
+                    <div class="count">${stats.total}</div>
+                </div>
+                <div class="stat-box" style="background: #e67e22;">
+                    <div>Pendientes</div>
+                    <div class="count">${stats.pendientes}</div>
+                </div>
+                <div class="stat-box" style="background: #27ae60;">
+                    <div>Compactados</div>
+                    <div class="count">${stats.compactados}</div>
+                </div>
+                <div class="stat-box" style="background: #9b59b6;">
+                    <div>Sin Datos</div>
+                    <div class="count">${stats.sinDatos}</div>
+                </div>
+                <div class="stat-box" style="background: #34495e;">
+                    <div>Policía</div>
+                    <div class="count">${stats.policia}</div>
+                </div>
+                <div class="stat-box" style="background: #f39c12;">
+                    <div>Falta tiempo</div>
+                    <div class="count">${stats.faltaTiempo}</div>
+                </div>
+            `;
         }
 
         async function searchVehicles() {
@@ -217,6 +310,7 @@
                     )
                     : allVehicles;
                 
+                updateStats(filteredData);
                 displayResults(filteredData);
             } catch (error) {
                 console.error("Error:", error);
@@ -331,6 +425,19 @@
                 }
                 
                 showNotification(`Resolución actualizada: ${currentSelections[dominio]}`);
+                
+                // Actualizar estadísticas después de la modificación
+                const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+                const filteredData = searchTerm 
+                    ? allVehicles.filter(vehicle => 
+                        (vehicle.dominio && vehicle.dominio.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.marca && vehicle.marca.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.color && vehicle.color.toLowerCase().includes(searchTerm))
+                    )
+                    : allVehicles;
+                
+                updateStats(filteredData);
                 
             } catch (error) {
                 console.error("Error:", error);
