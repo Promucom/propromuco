@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Vehicular Pro</title>
+    <style>
+        /* ESTILOS BASE RESPONSIVE */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: #f5f7fa;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        /* BARRA DE BÚSQUEDA */
+        .search-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        /* TABLA RESPONSIVE */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        
+        table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 13px;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        /* MENÚ DESPLEGABLE */
+        .resolution-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        select {
+            background-color: #f8f9fa;
+        }
+        
+        .confirm-btn {
+            background-color: #27ae60;
+            font-weight: bold;
+        }
+        
+        /* ESTILOS ESPECIALES */
+        .status-pending { color: #e67e22; }
+        .status-completed { color: #27ae60; }
+        .days-cell { 
+            font-weight: bold;
+            text-align: center;
+        }
+        .days-urgent { color: #e74c3c; }
+        .days-warning { color: #f39c12; }
+        .days-ok { color: #27ae60; }
+        
+        /* NOTIFICACIONES */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        /* PARA DISPOSITIVOS GRANDES */
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 16px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            th, td {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .notification {
+                top: 20px;
+                bottom: auto;
+                left: auto;
+                right: 20px;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification"></div>
+    
+    <div class="container">
+        <h1>🚗 Sistema Vehicular Pro</h1>
+        
+        <div class="search-box">
+            <h2>🔍 Buscar Vehículo</h2>
+            <input type="text" id="searchInput" placeholder="Patente, marca, modelo...">
+            <button onclick="searchVehicles()">Buscar</button>
+        </div>
+
+        <div id="loading" style="display: none; text-align: center; padding: 10px;">
+            <p>Cargando... <span class="loading"></span></p>
+        </div>
+
+        <div id="results">
+            <p style="text-align: center; color: #7f8c8d;">Ingrese un término de búsqueda</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        const SHEETBEST_API = "https://api.sheetbest.com/sheets/c920d07f-13a9-4ad1-a479-84ad8a3c6c2a";
+        let allVehicles = [];
+        let currentSelections = {};
+
+        // Mostrar notificación
+        function showNotification(message, isSuccess = true) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.style.backgroundColor = isSuccess ? "#27ae60" : "#e74c3c";
+            notification.style.display = "block";
+            
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 3000);
+        }
+
+        // Calcular días transcurridos
+        function calculateDays(fecha) {
+            if (!fecha) return "-";
+            
+            const fechaRegistro = new Date(fecha);
+            if (isNaN(fechaRegistro.getTime())) return "Fecha inválida";
+            
+            const hoy = new Date();
+            const diffTime = hoy - fechaRegistro;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Estilo según días transcurridos
+            let styleClass = "";
+            if (diffDays > 30) styleClass = "days-urgent";
+            else if (diffDays > 15) styleClass = "days-warning";
+            else styleClass = "days-ok";
+            
+            return `<span class="${styleClass}">${diffDays}</span>`;
+        }
+
+        // Función principal para buscar vehículos
+        async function searchVehicles() {
+            const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+            const loadingElement = document.getElementById("loading");
+            const resultsDiv = document.getElementById("results");
+            
+            loadingElement.style.display = "block";
+            resultsDiv.innerHTML = "";
+            currentSelections = {};
+            
+            try {
+                if (allVehicles.length === 0) {
+                    const response = await fetch(SHEETBEST_API);
+                    if (!response.ok) throw new Error("Error al cargar datos");
+                    allVehicles = await response.json();
+                }
+                
+                const filteredData = searchTerm 
+                    ? allVehicles.filter(vehicle => (
+                        (vehicle.dominio && vehicle.dominio.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.marca && vehicle.marca.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.modelo && vehicle.modelo.toLowerCase().includes(searchTerm)) ||
+                        (vehicle.color && vehicle.color.toLowerCase().includes(searchTerm))
+                    ))
+                    : allVehicles;
+                
+                displayResults(filteredData);
+            } catch (error) {
+                console.error("Error:", error);
+                resultsDiv.innerHTML = `
+                    <div style="color: red; padding: 10px; background: #ffeeee; border-radius: 5px;">
+                        <strong>Error:</strong> ${error.message || "No se pudieron cargar los datos"}
+                    </div>
+                `;
+            } finally {
+                loadingElement.style.display = "none";
+            }
+        }
+
+        // Mostrar resultados en tabla
+        function displayResults(vehicles) {
+            const resultsDiv = document.getElementById("results");
+            
+            if (!vehicles || vehicles.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div style="padding: 15px; text-align: center; color: #7f8c8d;">
+                        No se encontraron vehículos
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patente</th>
+                                <th>Fuente</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Días</th>
+                                <th>Resolución</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            vehicles.forEach(vehicle => {
+                const resolutionClass = vehicle.resolucion ? "status-completed" : "status-pending";
+                const resolutionText = vehicle.resolucion || 'Pendiente';
+                const tempSelection = currentSelections[vehicle.dominio] || vehicle.resolucion || '';
+                
+                html += `
+                    <tr id="row-${vehicle.dominio}">
+                        <td><strong>${vehicle.dominio || '-'}</strong></td>
+                        <td>${vehicle.fuente || '-'}</td>
+                        <td>${vehicle.marca || '-'}</td>
+                        <td>${vehicle.modelo || '-'}</td>
+                        <td class="days-cell">${calculateDays(vehicle.fecha)}</td>
+                        <td class="${resolutionClass}">${resolutionText}</td>
+                        <td class="resolution-menu">
+                            <select id="select-${vehicle.dominio}" onchange="storeSelection('${vehicle.dominio}')">
+                                <option value="">Seleccionar...</option>
+                                <option value="Compactar" ${tempSelection === 'Compactar' ? 'selected' : ''}>Compactar</option>
+                                <option value="Sin Datos" ${tempSelection === 'Sin Datos' ? 'selected' : ''}>Sin Datos</option>
+                                <option value="Falta transcurso de tiempo" ${tempSelection === 'Falta transcurso de tiempo' ? 'selected' : ''}>Falta transcurso</option>
+                                <option value="Pertenece a policia" ${tempSelection === 'Pertenece a policia' ? 'selected' : ''}>Pertenece a policía</option>
+                            </select>
+                            <button class="confirm-btn" onclick="updateResolution('${vehicle.dominio}')">CONFIRMAR</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+            resultsDiv.innerHTML = html;
+        }
+
+        // Almacena selección temporal
+        function storeSelection(dominio) {
+            const select = document.getElementById(`select-${dominio}`);
+            currentSelections[dominio] = select.value;
+        }
+
+        // Actualizar la resolución
+        async function updateResolution(dominio) {
+            if (!dominio || !currentSelections[dominio]) {
+                showNotification("Selecciona una opción primero", false);
+                return;
+            }
+
+            const loadingElement = document.getElementById("loading");
+            loadingElement.style.display = "block";
+            
+            try {
+                const vehicleIndex = allVehicles.findIndex(v => v.dominio === dominio);
+                if (vehicleIndex === -1) throw new Error("Vehículo no encontrado");
+                
+                const updatedVehicle = { 
+                    ...allVehicles[vehicleIndex], 
+                    resolucion: currentSelections[dominio] 
+                };
+                
+                const response = await fetch(SHEETBEST_API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify([updatedVehicle]),
+                });
+
+                if (!response.ok) throw new Error("Error en la API");
+
+                allVehicles[vehicleIndex] = updatedVehicle;
+                
+                const row = document.getElementById(`row-${dominio}`);
+                if (row) {
+                    row.cells[5].textContent = currentSelections[dominio];
+                    row.cells[5].className = "status-completed";
+                }
+                
+                showNotification(`✅ Resolución guardada: ${currentSelections[dominio]}`);
+                
+            } catch (error) {
+                console.error("Error:", error);
+                showNotification(`❌ Error: ${error.message}`, false);
+            } finally {
+                loadingElement.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
