@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Vehicular Pro</title>
     <style>
-        /* ESTILOS BASE OPTIMIZADOS */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -33,7 +32,6 @@
             border-bottom: 1px solid #3498db;
         }
         
-        /* BARRA DE BÚSQUEDA */
         .search-box {
             background: #ecf0f1;
             padding: 12px;
@@ -63,7 +61,6 @@
             margin-top: 6px;
         }
         
-        /* TABLA CON SCROLL HORIZONTAL MINIMO */
         .table-container {
             width: 100%;
             overflow-x: auto;
@@ -75,7 +72,7 @@
         
         table {
             width: 100%;
-            min-width: 700px; /* Ancho mínimo para scroll solo cuando sea necesario */
+            min-width: 700px; 
             border-collapse: collapse;
         }
         
@@ -95,17 +92,15 @@
             font-weight: bold;
         }
         
-        /* ANCHOS OPTIMIZADOS (PATENTE MÁS CORTA) */
-        .col-dominio { width: 12%; min-width: 70px; } /* Más estrecha */
+        .col-dominio { width: 12%; min-width: 70px; } 
         .col-fuente { width: 15%; min-width: 80px; }
         .col-marca { width: 12%; min-width: 70px; }
         .col-modelo { width: 12%; min-width: 70px; }
-        .col-color { width: 12%; min-width: 70px; } /* Nueva columna color */
+        .col-color { width: 12%; min-width: 70px; } 
         .col-fecha { width: 12%; min-width: 80px; }
         .col-resolucion { width: 15%; min-width: 100px; }
         .col-acciones { width: 20%; min-width: 120px; }
         
-        /* MENÚ DESPLEGABLE */
         .resolution-menu {
             display: flex;
             flex-direction: column;
@@ -125,11 +120,11 @@
             font-size: 13px;
         }
         
-        /* ESTILOS DE ESTADO */
+
         .status-pending { color: #e67e22; }
         .status-completed { color: #27ae60; }
         
-        /* NOTIFICACIONES */
+
         .notification {
             position: fixed;
             bottom: 15px;
@@ -170,12 +165,10 @@
     </div>
 
     <script>
-        // Configuración
         const SHEETBEST_API = "https://api.sheetbest.com/sheets/c920d07f-13a9-4ad1-a479-84ad8a3c6c2a";
         let allVehicles = [];
         let currentSelections = {};
 
-        // Mostrar notificación
         function showNotification(message, isSuccess = true) {
             const notification = document.getElementById("notification");
             notification.textContent = message;
@@ -187,7 +180,6 @@
             }, 2500);
         }
 
-        // Formatear fecha corta (dd/mm/aaaa)
         function formatShortDate(dateStr) {
             if (!dateStr) return "-";
             const date = new Date(dateStr);
@@ -200,7 +192,6 @@
             }).replace(/\//g, '/');
         }
 
-        // Función principal para buscar vehículos
         async function searchVehicles() {
             const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
             const loadingElement = document.getElementById("loading");
@@ -239,7 +230,6 @@
             }
         }
 
-        // Mostrar resultados en tabla optimizada
         function displayResults(vehicles) {
             const resultsDiv = document.getElementById("results");
             
@@ -301,13 +291,11 @@
             resultsDiv.innerHTML = html;
         }
 
-        // Almacena selección temporal
         function storeSelection(dominio) {
             const select = document.getElementById(`select-${dominio}`);
             currentSelections[dominio] = select.value;
         }
 
-        // Actualizar la resolución
         async function updateResolution(dominio) {
             if (!dominio || !currentSelections[dominio]) {
                 showNotification("Selecciona una opción primero", false);
