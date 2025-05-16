@@ -21,6 +21,9 @@
             padding: 12px;
             border-radius: 8px;
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
         }
         
         h1 {
@@ -85,11 +88,11 @@
         
         .table-container {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: auto;
             margin-top: 12px;
             border: 1px solid #e0e0e0;
             border-radius: 6px;
+            flex: 1;
         }
         
         table {
@@ -242,23 +245,14 @@
             const statsContainer = document.getElementById("statsContainer");
             
             const stats = {
-                total: vehicles.length,
-                pendientes: vehicles.filter(v => !v.resolucion || v.resolucion === "").length,
                 compactados: vehicles.filter(v => v.resolucion === "Compactar").length,
                 sinDatos: vehicles.filter(v => v.resolucion === "Sin Datos").length,
                 policia: vehicles.filter(v => v.resolucion === "Policia").length,
+                quemado: vehicles.filter(v => v.resolucion === "Auto quemado").length,
                 faltaTiempo: vehicles.filter(v => v.resolucion && v.resolucion.includes("Falta")).length
             };
             
             statsContainer.innerHTML = `
-                <div class="stat-box">
-                    <div>Total</div>
-                    <div class="count">${stats.total}</div>
-                </div>
-                <div class="stat-box" style="background: #e67e22;">
-                    <div>Pendientes</div>
-                    <div class="count">${stats.pendientes}</div>
-                </div>
                 <div class="stat-box" style="background: #27ae60;">
                     <div>A compactar</div>
                     <div class="count">${stats.compactados}</div>
@@ -270,6 +264,10 @@
                 <div class="stat-box" style="background: #34495e;">
                     <div>Policía</div>
                     <div class="count">${stats.policia}</div>
+                </div>
+                <div class="stat-box" style="background: #e74c3c;">
+                    <div>Auto quemado</div>
+                    <div class="count">${stats.quemado}</div>
                 </div>
                 <div class="stat-box" style="background: #f39c12;">
                     <div>Falta tiempo</div>
@@ -367,6 +365,7 @@
                                 <option value="Sin Datos" ${tempSelection === 'Sin Datos' ? 'selected' : ''}>Sin Datos</option>
                                 <option value="Falta tiempo" ${tempSelection.includes('Falta') ? 'selected' : ''}>Falta tiempo</option>
                                 <option value="Policia" ${tempSelection === 'Policia' ? 'selected' : ''}>Policía</option>
+                                <option value="Auto quemado" ${tempSelection === 'Auto quemado' ? 'selected' : ''}>Auto quemado</option>
                             </select>
                             <button class="confirm-btn" onclick="updateResolution('${vehicle.dominio}')">Confirmar</button>
                         </td>
